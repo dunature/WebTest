@@ -1,0 +1,50 @@
+h1{
+    color:red;
+}
+p{
+    color: green;
+}
+li{
+    color: aqua;
+    list-style-type: lower-greek;/*项目符号更改*/
+}
+.specuak{
+    color: orchid;
+    font-weight: bold;
+}
+li em{
+    color:rebeccapurple;
+}
+h1+p{
+    font-size: 200%;
+}
+a:link{
+    color:pink;
+}
+a:visited{
+    color:green;
+}
+a:hover{
+    text-decoration: none;
+}/*鼠标悬停时移除下划线*/
+body {
+    background-color: pink;
+  }
+  
+  @media (min-width: 300em) {
+    body {
+      background-color: blue;
+    }
+  }
+  .a{
+    background-color: aqua;
+  }
+  li[class*="a"]{
+    background-color: antiquewhite;
+  }
+  li[class$="a"]{
+    color: yellow;
+  }
+    li[class^="a"]{
+    color: blue;
+  }
