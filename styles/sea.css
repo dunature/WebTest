@@ -50,6 +50,7 @@ html, body{
     /* display:none; */
  }
  .sea .wave:nth-of-type(2){    
+    background-color: black;
     animation-duration: 7s;
     /* display: none; */
  }

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>事件委托</title>
+</head>
+<body>
+    <div id="container">
+        <div class="title"></div>
+        <div class="title"></div>
+        <div class="title"></div>
+        <div class="title"></div>
+        <div class="title"></div>
+        <div class="title"></div>
+        <div class="title"></div>
+        <div class="title"></div>
+        <div class="title"></div>
+        <div class="title"></div>
+        <div class="title"></div>
+        <div class="title"></div>
+        <div class="title"></div>
+        <div class="title"></div>
+        <div class="title"></div>
+        <div class="title"></div>
+    </div>
+</body>
+<style>
+    .title{
+        height: 195px;
+        width: 25%;
+        float: left;
+    }
+</style>
+<script>
+    function random(number){
+        return Math.floor(Math.random()*(number+1));
+    }
+    function beChange(){
+        const rnCol =`rgb(${random(255)},${random(255)},${random(255)})`;
+        return rnCol;
+    }
+    const container = document.querySelector("#container");
+    container.addEventListener("click",(event)=>{
+            event.target.style.backgroundColor = beChange();
+    })
+</script>
+</html>

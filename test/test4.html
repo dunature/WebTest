@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <button onclick="click_event()">2222</button>
+    <input type="text" onfocus="focus_event()" onblur="blur_event()">
+    <script>
+        function click_event(){
+            alert('点击事件触发');
+        }
+        function focus_event(){
+            console.log('焦点聚焦');
+        }
+        function blur_event(){
+            console.log('焦点丢失');
+        }
+        
+    </script>
+</body>
+    
+</html>
