@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+    <title>星球大战</title>
+</head>
+<body onload="onLoad();" onkeydown="onKeyDown(event);" onkeyup="onKeyUp(event);">
+<div id="sound" style="display: none">
+</div>
+<div style="display: none">
+    <img id="falcon" src="/images/falcon.png">
+    <img id="laser" src="/images/laser.png">
+    <img id="tie" src="/images/tie.png">
+    <img id="x" src="/images/x.png">
+    <img id="back" src="/images/back.jpg">
+</div>
+<canvas id="cvs" width="1280" height="720" style="border: solid 1px black"></canvas>
+<br/>
+<button id="startgame" onclick="_gamelogic.switchGameState('game');"
+        style="position: absolute; left: 600px; top: 400px"
+><h1>开始游戏</h1></button>
+<button id="restartgame" onclick="_gamelogic.switchGameState('init');"
+        style="position: absolute; left: 600px; top: 400px"
+        hidden="true"
+><h1>再来一次</h1></button>
+<script>
+    function GameObject(logic) {
+        this.logic = logic;
+        this.img = null;
+        this.x = 0;
+        this.y = 0;
+        this.w = 10;
+        this.h = 10;
+        this.speed = 10;
+        this.direction = 0; // 角度
+        this.rotation = 0;
+        this.state = "stop"; // 本身状态，stop,move
+        this.delstate = false; // true或者false，如果为true，则必须删除
+        this.bufoffset = 0;
+        this.init = function (imgid,x,y,w,h,speed,dir) {
+            this.img = document.getElementById(imgid);
+            this.x = x;
+            this.y = y;
+            this.w = w;
+            this.h = h;
+            this.speed = speed;
+            this.direction = dir;
+        };
+        this.update = function () {
+            this.x = this.x + this.speed * Math.cos(this.direction);
+            this.y = this.y + this.speed * Math.sin(this.direction);
+        };
+        this.onRender = function () {
+
+        };
+        this.render = function () {
+            if(!this.delstate){
+                this.logic.ctx.save();
+                this.logic.ctx.translate(this.x,this.y);
+                this.logic.ctx.rotate(this.rotation);
+                this.logic.ctx.drawImage(this.img,
+                    -this.w/2,-this.h/2,this.w,this.h);
+                this.onRender();
+                this.logic.ctx.restore();
+            }
+        };
+        this.setDirection = function (dir) {
+            this.direction = dir;
+        };
+        this.setState = function (state) {
+            this.state = state;
+        }
+    }
+    function GameBuf(logic){
+        this.logic = logic;
+        this.time = 5*60;
+        this.bulletcount = 2;
+    }
+    function GameEnemy(logic) {
+        GameObject.call(this,logic);
+        this.maxHP = 100;
+        this.bufoffset = 100;
+        this.hp = this.maxHP;
+        this.score = 10;
+        this.onDeath = function () {
+
+        };
+        this.onHit = function (dmg) {
+            if(!this.delstate){
+                this.hp -= dmg;
+                if(this.hp <= 0){
+                    this.logic.playsound("/sound/boom.mp3");
+                    this.logic.addScore(this.score);
+                    this.delstate = true;
+                    this.onDeath();
+                }
+            }
+        };
+
+        this.update = function () {
+            if(!this.delstate){
+                if(this.state == "move"){
+                    var x = this.x + this.speed * Math.cos(this.direction);
+                    if(x >= 0-this.bufoffset && x < this.logic.cvs.width+this.bufoffset){
+                        this.x = x;
+                    }
+                    else{
+                        this.direction = Math.PI - this.direction;
+                    }
+                    var y = this.y + this.speed * Math.sin(this.direction);
+                    if(y >= 0-this.bufoffset && y < this.logic.cvs.height+this.bufoffset){
+                        this.y = y;
+                    }
+                    else{
+                        this.direction = -this.direction;
+                    }
+                }
+                else if(this.state == "stop"){
+                }
+            }
+            else{
+
+            }
+        };
+        this.onRender = function () {
+            this.logic.ctx.rotate(-this.rotation);
+            this.logic.ctx.fillStyle = "#00FF00";
+            this.logic.ctx.fillRect(-this.w/2,-this.h/2,this.hp/this.maxHP*this.w,this.w/10);
+            this.logic.ctx.strokeRect(-this.w/2,-this.h/2,this.w,this.w/10);
+        };
+    }
+    function GameEnemyX(logic) {
+        GameEnemy.call(this,logic);
+        this.maxHP = 200;
+        this.bufoffset = 150;
+        this.hp = this.maxHP;
+        this.rotation = Math.PI;
+        this.score = 20;
+        this.onDeath = function () {
+            this.logic.player.addBuf(new GameBuf(this.logic));
+        };
+    }
+    function GameBullet(logic) {
+        GameObject.call(this,logic);
+        this.bufoffset = 200;
+        this.checkHit = function () {
+            for(var i = 0; i < this.logic.enemies.length; ++i){
+                var e = this.logic.enemies[i];
+                if(e.delstate){
+                    continue;
+                }
+                if(this.x > e.x - e.w*0.4 && this.x < e.x + e.w*0.4
+                    && this.y > e.y - (e.h/2 + this.h*0.4) && this.y < e.y + (e.h/2 + this.h*0.4)
+                ){
+                    e.onHit(30);
+                    this.delstate = true;
+                }
+            }
+        };
+        this.update = function () {
+            if(!this.delstate){
+                if(this.state == "move"){
+                    this.checkHit();
+                    var x = this.x + this.speed * Math.cos(this.direction);
+                    if(x >= 0-this.bufoffset && x < this.logic.cvs.width+this.bufoffset){
+                        this.x = x;
+                    }
+                    else{
+                        this.delstate = true;
+                    }
+                    var y = this.y + this.speed * Math.sin(this.direction);
+                    if(y >= 0-this.bufoffset && y < this.logic.cvs.height+this.bufoffset){
+                        this.y = y;
+                    }
+                    else{
+                        this.delstate = true;
+                    }
+                }
+                else if(this.state == "stop"){
+                }
+            }
+            else{
+
+            }
+        }
+    }
+    function GamePlayerObject(logic) {
+        GameObject.call(this,logic);
+        this.CD = 0.2 * 60; // 表示1秒
+        this.currentCD = 0;
+        this.bulletcount = 1;
+        this.realbulletcount = this.bulletcount;
+        this.buf = new Array();
+        this.addBuf = function (buf) {
+            this.buf.push(buf);
+        };
+        this.updateBuf = function () {
+            this.realbulletcount = this.bulletcount;
+            for(var i = this.buf.length - 1; i >= 0; --i){
+                var buf = this.buf[i];
+                buf.time--;
+                if(buf.time < 0){
+                    this.buf.splice(i,1);
+                }
+                else{
+                    if(buf.bulletcount > 0){
+                        this.realbulletcount += buf.bulletcount;
+                    }
+                }
+            }
+        };
+
+        this.firestate = false;
+        this.setFireState = function (firestate) {
+            this.firestate = firestate;
+        };
+        this.update = function () {
+            this.updateBuf();
+            if(this.currentCD < this.CD){
+                this.currentCD++;
+            }
+            else if(this.firestate){
+                this.currentCD -= this.CD;
+                this.logic.playsound("/sound/bullet.mp3");
+                var dist = 15;
+                var xstart = this.x - (this.realbulletcount - 1) / 2 * dist;
+                for (var i = 0; i < this.realbulletcount; ++i) {
+                    this.logic.createBullet("laser", xstart + dist * i, this.y - 100, 10, 70, 15, -Math.PI / 2);
+                }
+            }
+            if(this.state == "move"){
+                var x = this.x + this.speed * Math.cos(this.direction);
+                if(x >= 0 && x < this.logic.cvs.width){
+                    this.x = x;
+                }
+                var y = this.y + this.speed * Math.sin(this.direction);
+                if(y >= 0 && y < this.logic.cvs.height){
+                    this.y = y;
+                }
+            }
+            else if(this.state == "stop"){
+            }
+        };
+        this.onRender = function () {
+            this.logic.ctx.rotate(-this.rotation);
+            this.logic.ctx.fillStyle = "#ff5b0c";
+            for(var i = 0; i < this.buf.length; ++i){
+                this.logic.ctx.fillRect(-this.w/2 + i * this.w/10,-this.h/2,
+                    this.w/12,this.w/12);
+            }
+        };
+    }
+    function GameLogic(cvsid) {
+        this.cvs = document.getElementById(cvsid);
+        this.ctx = this.cvs.getContext("2d");
+        this.back = document.getElementById("back");
+
+        this.gamestate = "init"; // 游戏状态，init，初始，显示“开始游戏”画面。game，游戏中，end，结束，显示“再来一次”
+        this.switchGameState = function (state) {
+            if(state != this.gamestate){
+                this.gamestate = state;
+                switch (state){
+                    case "init":{
+                        this.stopAllSound();
+                        this.score = 0;
+                        this.stage = 0;
+                        this.keystate = 0;
+                        this.enemies.splice(0,this.enemies.length);
+                        this.bullets.splice(0,this.bullets.length);
+                        this.enemylimit = 5;
+                        this.enemyCreateCD = 2*60; // 2秒
+                        this.enemyCurrentCD = 0;
+                        this.player = new GamePlayerObject(this);
+                        this.player.init("falcon",this.cvs.width/2,this.cvs.height*0.8,200,200,5,0);
+                        document.getElementById("startgame").removeAttribute("hidden");
+                        document.getElementById("restartgame").setAttribute("hidden","true");
+                    }break;
+                    case "game":{
+                        document.getElementById("startgame").setAttribute("hidden","true");
+                        document.getElementById("restartgame").setAttribute("hidden","true");
+                    }break;
+                    case "end":{
+                        this.keystate = 0;
+                        this.enemylimit = 5;
+                        this.enemyCreateCD = 2*60; // 2秒
+                        this.enemyCurrentCD = 0;
+                        document.getElementById("startgame").setAttribute("hidden","true");
+                        document.getElementById("restartgame").removeAttribute("hidden");
+                    }break;
+                }
+            }
+        };
+
+        this.score = 0;
+        this.addScore = function (score) {
+            if(this.score < 100 && (this.score+score) >= 100){
+                this.switchStage(1);
+            }
+            this.score += score;
+            if(this.score >= 200){ // 游戏结束
+                this.switchGameState("end");
+            }
+        };
+        this.stage = 0;
+        this.switchStage=function (stage) {
+            switch (stage){
+                case 0:this.enemylimit=5;break;
+                case 1:this.enemylimit=10;break;
+                default:this.enemylimit=0;break;
+            }
+            this.stage = stage;
+        };
+        this.updateStage = function () {
+            switch (this.stage){
+                case 0:this.updateStage0();break;
+                case 1: this.updateStage1();break;
+                default:break;
+            }
+        };
+        this.updateStage0 = function () {
+            if(this.enemies.length < this.enemylimit){
+                if(this.enemyCurrentCD >= this.enemyCreateCD){
+                    this.enemyCurrentCD -= this.enemyCreateCD;
+                    this.createEnemyTie(this.cvs.width*Math.random(),0,
+                            (Math.random()*2-1)*Math.PI/4 + Math.PI/2);
+                }
+                else{
+                    this.enemyCurrentCD++;
+                }
+            }
+        };
+        this.updateStage1 = function () {
+            if(this.enemies.length < this.enemylimit){
+                if(this.enemyCurrentCD >= this.enemyCreateCD){
+                    this.enemyCurrentCD -= this.enemyCreateCD;
+                    if(Math.random() < 0.8){
+                        this.createEnemyTie(this.cvs.width*Math.random(),0,
+                            (Math.random()*2-1)*Math.PI/4 + Math.PI/2);
+                    }
+                    else{
+                        this.createEnemyX(this.cvs.width*Math.random(),0,
+                            (Math.random()*2-1)*Math.PI/4 + Math.PI/2);
+                    }
+                }
+                else{
+                    this.enemyCurrentCD++;
+                }
+            }
+        };
+        this.sound = new Array();
+        this.playsound = function (soundfile) {
+            var realpath = "sound/" + soundfile;
+            var sound = null;
+            for(var i = 0; i < this.sound.length; i++){
+                var s = this.sound[i];
+                if(s.getAttribute("src") != realpath){
+                    continue;
+                }
+                if(s.ended || s.currentTime == 0){
+                    sound = s;
+                    break;
+                }
+            }
+            if(sound == null) {
+                var sc = document.getElementById("sound");
+                var s = document.createElement("audio");
+                s.setAttribute("src", realpath);
+                s.setAttribute("controls", "controls");
+                sc.appendChild(s);
+                this.sound.push(s);
+                sound = s;
+            }
+            sound.play();
+        };
+        this.stopAllSound = function () {
+            for(var i = 0; i < this.sound.length; i++) {
+                var s = this.sound[i];
+                s.pause();
+                s.currentTime = 0;
+            }
+        };
+        this.keystate = 0;
+        this.updateMoveState=function () {
+            switch (this.keystate){
+                case 8:
+                case 13:
+                    this.player.setDirection(Math.PI);this.player.setState("move");break;
+                case 4:
+                case 14:
+                    this.player.setDirection(-Math.PI/2);this.player.setState("move");break;
+                case 2:
+                case 7:
+                    this.player.setDirection(0);this.player.setState("move");break;
+                case 1:
+                case 11:
+                    this.player.setDirection(Math.PI/2);this.player.setState("move");break;
+                case 12:this.player.setDirection(-Math.PI*3/4);this.player.setState("move");break;
+                case 6:this.player.setDirection(-Math.PI*1/4);this.player.setState("move");break;
+                case 9:this.player.setDirection(Math.PI*3/4);this.player.setState("move");break;
+                case 3:this.player.setDirection(Math.PI*1/4);this.player.setState("move");break;
+                default:this.player.setState("stop");break;
+            }
+        };
+        this.onKeyDown = function (keyCode) {
+            switch(keyCode){
+                case 37: this.keystate |= 8; break;
+                case 38: this.keystate |= 4; break;
+                case 39: this.keystate |= 2; break;
+                case 40: this.keystate |= 1; break;
+                case 32: this.player.setFireState(true);break;
+            }
+            this.updateMoveState();
+        };
+        this.onKeyUp = function (keyCode) {
+            switch(keyCode){
+                case 37: this.keystate &= ~8; break;
+                case 38: this.keystate &= ~4; break;
+                case 39: this.keystate &= ~2; break;
+                case 40: this.keystate &= ~1; break;
+                case 32: this.player.setFireState(false);break;
+            }
+            this.updateMoveState();
+        };
+        this.enemies = new Array();
+        this.enemylimit = 5;
+        this.enemyCreateCD = 2*60; // 2秒
+        this.enemyCurrentCD = 0;
+        
+        this.createEnemyTie = function (x,y,dir) {
+            var e = new GameEnemy(this);
+            var imgid = "tie",w = 100,h = 100,speed = 3;
+            e.init(imgid,x,y,w,h,speed,dir);
+            e.setState("move");
+            this.enemies.push(e);
+        };
+        this.createEnemyX = function (x,y,dir) {
+            var e = new GameEnemyX(this);
+            var imgid = "x",w = 150,h = 150,speed = 4;
+            e.init(imgid,x,y,w,h,speed,dir);
+            e.setState("move");
+            this.enemies.push(e);
+        };
+        this.bullets = new Array();
+        this.createBullet = function (imgid,x,y,w,h,speed,dir) {
+            var b = new GameBullet(this);
+            b.init(imgid,x,y,w,h,speed,dir);
+            b.setState("move");
+            this.bullets.push(b);
+        };
+        this.updateArray = function (arr) {
+            for(var i = arr.length-1; i >= 0; --i){
+                arr[i].update();
+                if(arr[i].delstate){
+                    arr.splice(i,1);
+                }
+            }
+        };
+        this.renderArray = function (arr) {
+            for(var i = 0; i < arr.length; ++i){
+                arr[i].render();
+            }
+        };
+        this.player = new GamePlayerObject(this);
+        this.player.init("falcon",this.cvs.width/2,this.cvs.height*0.8,200,200,5,0);
+        this.update = function () {
+            if(this.gamestate == "game"){
+                this.updateStage();
+                this.player.update();
+                this.updateArray(this.bullets);
+                this.updateArray(this.enemies);
+            }
+        };
+        this.render = function () {
+            this.ctx.clearRect(0,0,this.cvs.width,this.cvs.height);
+            this.ctx.drawImage(this.back,0,0);
+            switch (this.gamestate){
+                case "init":{
+                }break;
+                case "game":{
+                    this.renderArray(this.bullets);
+                    this.renderArray(this.enemies);
+                    this.player.render();
+                    {
+                        this.ctx.fillStyle="#12e4ff";
+                        this.ctx.font = "900 40px 微软雅黑";
+                        this.ctx.textAlign = "left";
+                        this.ctx.textBaseline = "hanging";
+                        this.ctx.fillText("第" + (this.stage+1) + "关",this.cvs.width*0.05,this.cvs.height*0.05);
+                        this.ctx.strokeText("第" + (this.stage+1) + "关",this.cvs.width*0.05,this.cvs.height*0.05);
+                    }
+                    {
+                        this.ctx.fillStyle="#4c0000";
+                        this.ctx.font = "900 40px 微软雅黑";
+                        this.ctx.textAlign = "right";
+                        this.ctx.textBaseline = "hanging";
+                        this.ctx.fillText("积分:" + this.score,this.cvs.width*0.95,this.cvs.height*0.05);
+                        this.ctx.strokeStyle= "#FFFFFF";
+                        this.ctx.strokeText("积分:" + this.score,this.cvs.width*0.95,this.cvs.height*0.05);
+                    }
+                }break;
+                case "end":{
+                }break;
+                default:break;
+            }
+        };
+    }
+    var _gamelogic = null;
+    function onLoad() {
+        _gamelogic = new GameLogic("cvs");
+        requestAnimationFrame(render);
+    }
+    function render() {
+        _gamelogic.update();
+        _gamelogic.render();
+        requestAnimationFrame(render);
+    }
+    function onKeyDown(e) {
+        if(_gamelogic == null){
+            return;
+        }
+        _gamelogic.onKeyDown(e.keyCode);
+    }
+    function onKeyUp(e) {
+        if(_gamelogic == null){
+            return;
+        }
+        _gamelogic.onKeyUp(e.keyCode);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1.22游戏项目开发</title>
+</head>
+<body>
+    <a href="https://www.baidu.com/">
+        <img src="/images/firefox-icon.png" alt="点击图片跳转">
+    </a>
+    <h1 id="test"></h1>
+</body>
+<script>
+    function findMax(a,b){
+        return c=a>b?a:b;
+    }
+
+    function findMax3(a, b, c) {
+        var max = (a > b) ? ((a > c) ? a : c) : ((b > c) ? b : c);
+        return max; 
+}
+        var result = findMax3(7, 90, 7);
+        var h1 = document.getElementById("test");
+        h1.innerHTML = result;
+
+        let inT = 35;
+        let strinG = 'ABC';
+        let objecT = {
+            int : 35,
+            string : 'aaa',
+            fun : function(){
+                console.log("fun");
+            }
+        }
+        console.log(inT,strinG,objecT);
+
+</script>
+</html>

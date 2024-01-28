@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <canvas id="myCanvas" width="1500" height="1500"></canvas>
+</body>
+<script>
+    var c = document.getElementById("myCanvas");
+    var ctx = c.getContext("2d");
+
+    ctx.fillStyle="red";
+    ctx.font="900 60px black"
+    ctx.fillText('111');
+
+    for(var angle=0;angle<360;++angle){
+        var x =angle*2;
+        var y =300 - Math.sin(angle/180*Math.PI)*200;
+        ctx.fillRect(x,y,4,4);
+    }
+</script>
+<style>
+    canvas{
+        border: 1px solid black;
+    }
+</style>
+</html>

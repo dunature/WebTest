@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happer NewYear!</title>
+    <style>
+        body{
+            background-color: #c6070c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            color:#ffe392;
+            flex-direction: column;
+        }
+        #phrase{
+            margin-bottom: 20px;
+        }
+        #line1{
+            height: 20px;
+            font-size:1.1em;
+            letter-spacing: 30px;
+        }
+        #line2{
+            font:  700 8em '';
+            text-align: center;
+            padding: 0px;
+        }
+        #line3{
+            font-size: 3em;
+        }
+        #btn{
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 100px;
+            background-color: #ffe392;
+            font-size: 30px;
+            color: #c6070c
+        }
+
+    </style>
+</head>
+<body>
+    <div id="phrase">
+        <span id="line1">Wan Shi Ru Yi</span><br>
+        <span id="line2">萬 事 如 意</span><br>
+        <span id="line3">(MAY 10,000 THINGS GO ACCORDING TO YOUR WISHES)</span>
+    </div>
+    <button id="btn">+ 福 +</button>
+
+</body>
+<script>
+    var phrases = [
+        ['xin xi rui ru','新 春 瑞 如','(MAY YOU BE AS HAPPY AS THE NEW YEAR)'],
+        ['shen ti jian kang','身 體 健 康','(GOOD HEALTH)'],
+        ['cai yuan guan jin','財 源 廣 進','(MAY WEALTH COME POURING IN)'],
+        ['wan shi ru yi','萬 事 如 意','(MAY 10,000 THINGS GO ACCORDING TO YOUR WISHES)'],
+        ['da ji da li','大 吉 大 利','(GREAT LUCK AND GREAT PROFIT)'],
+        ['nian nian you yu','年 年 有 餘','(SURPLUS YEAR AFTER YEAR)'],
+        ['gong he xin nian','恭 賀 新 年','(WISHING YOU A HAPPY NEW YEAR)'],
+        ['xin xian kuai le','新 年 快 樂','(HAPPY NEW YEAR)']
+    ]
+    var generateBtn = document.getElementById('btn');
+    var linel = document.getElementById('line1');
+    var line2 = document.getElementById('line2');
+    var line3 = document.getElementById('line3');
+    var currentIndex = 0;
+    function generatePhrase(){
+        currentIndex = (currentIndex + 1) % phrases.length;
+        line1.textContent = phrases[currentIndex][0];
+        line2.textContent = phrases[currentIndex][1];
+        line3.textContent = phrases[currentIndex][2];
+        console.log(currentIndex);
+    }
+    generateBtn.addEventListener('click',generatePhrase);
+</script>
+</html>

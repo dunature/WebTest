@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body onload="onLoad()">
+    <div style="display:none">
+        <img id="cxk" src="/images/firefox-icon.png" alt="111"/>
+    </div>
+    <canvas id="cvs" width="800" height="600" style="border: 1px solid black"></canvas>
+</body>
+<script>
+    var c = document.getElementById("cvs");
+    var ctx = c.getContext("2d");
+    function onLoad(){
+        var cxk = document.getElementById("cxk");
+        ctx.drawImage(cxk,0,0,1222,1222,100,100,225,225);//其中包括要绘制的图像（在这里是 cxk 图片）、图像的剪切位置和尺寸（156, 11, 225, 225）、图像在画布上的位置（10, 10），以及图像在画布上的显示尺寸（225/2, 225/2）
+    }
+</script>
+</html>
+<!-- //在绘图中，绘图上下文指的是用于绘制图形、文本和图像的环境或工具。它提供了一组方法和属性，用于控制绘图操作，并将绘制的内容渲染到指定的画布元素上。在 JavaScript 中，可以使用 getContext 方法来获取绘图上下文对象，通常用于处理 <canvas> 元素。
+    这段代码首先获取了 <canvas> 元素和其 2D 绘制上下文对象 ctx。然后，在 onLoad() 函数中，通过 getElementById() 方法获取了隐藏的 <img> 元素 cxk，并将其绘制到画布上。
+
+        drawImage() 方法接受多个参数，其中包括要绘制的图像（在这里是 cxk 图片）、图像的剪切位置和尺寸（156, 11, 225, 225）、图像在画布上的位置（10, 10），以及图像在画布上的显示尺寸（225/2, 225/2）。
+        
+        最后，在 <body> 标签的 onload 事件中调用 onLoad() 函数，以便在页面加载完成后绘制图片。请确保 cxk.jpg 图片与 HTML 文件在同一目录下，并替换 <img> 标签中的 src 属性为正确的图片路径。 -->
